@@ -1,9 +1,12 @@
 locals {
   application_name = "skulder"
+  region           = "eu-north-1"
+  account_id       = "852264810958"
 }
 
 provider "aws" {
-  region = "eu-north-1"
+  region = local.region
+
 }
 
 
@@ -24,14 +27,14 @@ module "api_gateway" {
 
   # Custom domain
   domain_name                 = "skulder.stafre.se"
-  domain_name_certificate_arn = "arn:aws:acm:eu-north-1:852264810958:certificate/a73c2e80-7cfa-43f0-a57d-6f2557d3c2ae"
+  domain_name_certificate_arn = "arn:aws:acm:${local.region}:${local.account_id}:certificate/a73c2e80-7cfa-43f0-a57d-6f2557d3c2ae"
 
   default_stage_access_log_destination_arn = aws_cloudwatch_log_group.logs.arn
   default_stage_access_log_format          = "$context.identity.sourceIp - - [$context.requestTime] \"$context.httpMethod $context.routeKey $context.protocol\" $context.status $context.responseLength $context.requestId $context.integrationErrorMessage"
 
 
   integrations = {
-    "ANY /" = {
+    "GET /" = {
       lambda_arn             = module.lambda_function.lambda_function_arn
       payload_format_version = "2.0"
       timeout_milliseconds   = 12000
@@ -76,10 +79,12 @@ module "lambda_function" {
   allowed_triggers = {
     AllowExecutionFromAPIGateway = {
       service    = "apigateway"
-      source_arn = "arn:aws:execute-api:eu-north-1:852264810958:jbv9viny34/*/*/*"
+      source_arn = "arn:aws:execute-api:${local.region}:${local.account_id}:jbv9viny34/*/*/*"
     }
   }
 
+attach_policy = true
+  policy = "arn:aws:iam::852264810958:policy/skulder-dynamodb"
 
   tags = {
     Name        = "skulder"
@@ -89,4 +94,46 @@ module "lambda_function" {
 
 resource "aws_cloudwatch_log_group" "logs" {
   name = local.application_name
+}
+
+module "dynamodb_table" {
+  source = "terraform-aws-modules/dynamodb-table/aws"
+
+  name     = local.application_name
+  hash_key = "id"
+
+  attributes = [
+    {
+      name = "id"
+      type = "N"
+    }
+  ]
+}
+
+module "iam_policy" {
+  source = "terraform-aws-modules/iam/aws//modules/iam-policy"
+
+  name        = "${local.application_name}-dynamodb"
+  path        = "/"
+  description = "DynamoDB access"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement":[{
+    "Effect": "Allow",
+    "Action": [
+     "dynamodb:BatchGetItem",
+     "dynamodb:GetItem",
+     "dynamodb:Query",
+     "dynamodb:Scan",
+     "dynamodb:BatchWriteItem",
+     "dynamodb:PutItem",
+     "dynamodb:UpdateItem"
+    ],
+    "Resource": "arn:aws:dynamodb:${local.region}:${local.account_id}:table/${local.application_name}"
+   }
+  ]
+}
+EOF
 }
