@@ -34,7 +34,7 @@ module "api_gateway" {
 
 
   integrations = {
-    "GET /" = {
+    "POST /" = {
       lambda_arn             = module.lambda_function.lambda_function_arn
       payload_format_version = "2.0"
       timeout_milliseconds   = 12000
@@ -68,27 +68,27 @@ module "records" {
 module "lambda_function" {
   source = "terraform-aws-modules/lambda/aws"
 
-  function_name = "${local.application_name}-lambda"
+  function_name = "entry-writer"
   description   = "Lambda handler"
   handler       = "index.handler"
   runtime       = "nodejs16.x"
 
-  source_path = "../src/lambda"
+  source_path = "../src/entry-writer"
   publish     = true
 
   allowed_triggers = {
     AllowExecutionFromAPIGateway = {
       service    = "apigateway"
-      source_arn = "arn:aws:execute-api:${local.region}:${local.account_id}:jbv9viny34/*/*/*"
+      source_arn = "arn:aws:execute-api:${local.region}:${local.account_id}:pux8qwb6yh/*/*/*"
     }
   }
 
-attach_policy = true
-  policy = "arn:aws:iam::852264810958:policy/skulder-dynamodb"
+  attach_policy = true
+  policy        = "arn:aws:iam::852264810958:policy/skulder-dynamodb"
 
   tags = {
     Name        = "skulder"
-    Application = "${local.application_name}-"
+    Application = "${local.application_name}"
   }
 }
 
@@ -99,13 +99,13 @@ resource "aws_cloudwatch_log_group" "logs" {
 module "dynamodb_table" {
   source = "terraform-aws-modules/dynamodb-table/aws"
 
-  name     = local.application_name
+  name     = "${local.application_name}-debts"
   hash_key = "id"
 
   attributes = [
     {
       name = "id"
-      type = "N"
+      type = "S"
     }
   ]
 }
@@ -131,7 +131,7 @@ module "iam_policy" {
      "dynamodb:PutItem",
      "dynamodb:UpdateItem"
     ],
-    "Resource": "arn:aws:dynamodb:${local.region}:${local.account_id}:table/${local.application_name}"
+    "Resource": "arn:aws:dynamodb:${local.region}:${local.account_id}:table/${local.application_name}-debts"
    }
   ]
 }
