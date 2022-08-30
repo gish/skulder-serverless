@@ -35,7 +35,12 @@ module "api_gateway" {
 
   integrations = {
     "POST /" = {
-      lambda_arn             = module.lambda_function.lambda_function_arn
+      lambda_arn             = module.lambda_entry_writer.lambda_function_arn
+      payload_format_version = "2.0"
+      timeout_milliseconds   = 12000
+    }
+     "GET /" = {
+      lambda_arn             = module.lambda_entries_getter.lambda_function_arn
       payload_format_version = "2.0"
       timeout_milliseconds   = 12000
     }
@@ -65,7 +70,7 @@ module "records" {
 }
 
 
-module "lambda_function" {
+module "lambda_entry_writer" {
   source = "terraform-aws-modules/lambda/aws"
 
   function_name = "entry-writer"
@@ -79,7 +84,34 @@ module "lambda_function" {
   allowed_triggers = {
     AllowExecutionFromAPIGateway = {
       service    = "apigateway"
-      source_arn = "arn:aws:execute-api:${local.region}:${local.account_id}:pux8qwb6yh/*/*/*"
+      source_arn = "arn:aws:execute-api:${local.region}:${local.account_id}:bj16nmfrqb/*/*/*"
+    }
+  }
+
+  attach_policy = true
+  policy        = "arn:aws:iam::852264810958:policy/skulder-dynamodb"
+
+  tags = {
+    Name        = "skulder"
+    Application = "${local.application_name}"
+  }
+}
+
+module "lambda_entries_getter" {
+  source = "terraform-aws-modules/lambda/aws"
+
+  function_name = "entries-getter"
+  description   = "Lambda handler"
+  handler       = "index.handler"
+  runtime       = "nodejs16.x"
+
+  source_path = "../src/entries-getter"
+  publish     = true
+
+  allowed_triggers = {
+    AllowExecutionFromAPIGateway = {
+      service    = "apigateway"
+      source_arn = "arn:aws:execute-api:${local.region}:${local.account_id}:bj16nmfrqb/*/*/*"
     }
   }
 
