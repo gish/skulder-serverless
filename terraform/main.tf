@@ -73,8 +73,8 @@ module "records" {
 module "lambda_entry_writer" {
   source = "terraform-aws-modules/lambda/aws"
 
-  function_name = "entry-writer"
-  description   = "Lambda handler"
+  function_name = "${local.application_name}-entry-writer"
+  description   = "write entry"
   handler       = "index.handler"
   runtime       = "nodejs16.x"
 
@@ -84,12 +84,14 @@ module "lambda_entry_writer" {
   allowed_triggers = {
     AllowExecutionFromAPIGateway = {
       service    = "apigateway"
-      source_arn = "arn:aws:execute-api:${local.region}:${local.account_id}:bj16nmfrqb/*/*/*"
+      source_arn = "arn:aws:execute-api:${local.region}:${local.account_id}:${module.api_gateway.this_apigatewayv2_api_arn}/*/*/*"
     }
   }
 
   attach_policy = true
   policy        = "arn:aws:iam::852264810958:policy/skulder-dynamodb"
+
+  cloudwatch_logs_retention_in_days = 3
 
   tags = {
     Name        = "skulder"
@@ -100,8 +102,8 @@ module "lambda_entry_writer" {
 module "lambda_entries_getter" {
   source = "terraform-aws-modules/lambda/aws"
 
-  function_name = "entries-getter"
-  description   = "Lambda handler"
+  function_name = "${local.application_name}-entries-getter"
+  description   = "retrieve all entries"
   handler       = "index.handler"
   runtime       = "nodejs16.x"
 
@@ -111,12 +113,14 @@ module "lambda_entries_getter" {
   allowed_triggers = {
     AllowExecutionFromAPIGateway = {
       service    = "apigateway"
-      source_arn = "arn:aws:execute-api:${local.region}:${local.account_id}:bj16nmfrqb/*/*/*"
+      source_arn = "arn:aws:execute-api:${local.region}:${local.account_id}:sy5bexuwy5/*/*/*"
     }
   }
 
   attach_policy = true
   policy        = "arn:aws:iam::852264810958:policy/skulder-dynamodb"
+
+  cloudwatch_logs_retention_in_days = 3
 
   tags = {
     Name        = "skulder"
