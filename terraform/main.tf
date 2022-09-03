@@ -1,12 +1,17 @@
 locals {
-  application_name = "skulder"
-  region           = "eu-north-1"
-  account_id       = "852264810958"
+  application_name      = "skulder"
+  region                = "eu-north-1"
+  account_id            = "852264810958"
+  log_retention_in_days = 3
 }
 
 provider "aws" {
   region = local.region
-
+  default_tags {
+    tags = {
+      CreatedByTerraform = "yes"
+    }
+  }
 }
 
 
@@ -29,17 +34,22 @@ module "api_gateway" {
   domain_name                 = "skulder.stafre.se"
   domain_name_certificate_arn = "arn:aws:acm:${local.region}:${local.account_id}:certificate/a73c2e80-7cfa-43f0-a57d-6f2557d3c2ae"
 
-  default_stage_access_log_destination_arn = aws_cloudwatch_log_group.logs.arn
+  default_stage_access_log_destination_arn = aws_cloudwatch_log_group.api_gateway.arn
   default_stage_access_log_format          = "$context.identity.sourceIp - - [$context.requestTime] \"$context.httpMethod $context.routeKey $context.protocol\" $context.status $context.responseLength $context.requestId $context.integrationErrorMessage"
 
 
   integrations = {
-    "POST /" = {
+    "GET /" = {
+      integration_type   = "HTTP_PROXY"
+      integration_uri    = "http://${aws_s3_bucket.www.website_endpoint}"
+      integration_method = "GET"
+    }
+    "POST /api/v1/entries" = {
       lambda_arn             = module.lambda_entry_writer.lambda_function_arn
       payload_format_version = "2.0"
       timeout_milliseconds   = 12000
     }
-    "GET /" = {
+    "GET /api/v1/entries" = {
       lambda_arn             = module.lambda_entries_getter.lambda_function_arn
       payload_format_version = "2.0"
       timeout_milliseconds   = 12000
@@ -84,14 +94,14 @@ module "lambda_entry_writer" {
   allowed_triggers = {
     AllowExecutionFromAPIGateway = {
       service    = "apigateway"
-      source_arn = "arn:aws:execute-api:${local.region}:${local.account_id}:sy5bexuwy5/*/*/*"
+      source_arn = "arn:aws:execute-api:${local.region}:${local.account_id}:85a8zt7qj6/*/*/*"
     }
   }
 
   attach_policy = true
   policy        = "arn:aws:iam::852264810958:policy/skulder-dynamodb"
 
-  cloudwatch_logs_retention_in_days = 3
+  cloudwatch_logs_retention_in_days = local.log_retention_in_days
 
   tags = {
     Name        = "skulder"
@@ -113,14 +123,14 @@ module "lambda_entries_getter" {
   allowed_triggers = {
     AllowExecutionFromAPIGateway = {
       service    = "apigateway"
-      source_arn = "arn:aws:execute-api:${local.region}:${local.account_id}:sy5bexuwy5/*/*/*"
+      source_arn = "arn:aws:execute-api:${local.region}:${local.account_id}:85a8zt7qj6/*/*/*"
     }
   }
 
   attach_policy = true
   policy        = "arn:aws:iam::852264810958:policy/skulder-dynamodb"
 
-  cloudwatch_logs_retention_in_days = 3
+  cloudwatch_logs_retention_in_days = local.log_retention_in_days
 
   tags = {
     Name        = "skulder"
@@ -128,8 +138,9 @@ module "lambda_entries_getter" {
   }
 }
 
-resource "aws_cloudwatch_log_group" "logs" {
-  name = local.application_name
+resource "aws_cloudwatch_log_group" "api_gateway" {
+  name              = "${local.application_name}-api_gateway"
+  retention_in_days = local.log_retention_in_days
 }
 
 module "dynamodb_table" {
@@ -172,4 +183,24 @@ module "iam_policy" {
   ]
 }
 EOF
+}
+
+
+###########
+# S3 bucket
+###########
+resource "aws_s3_bucket" "www" {
+  bucket = "${local.application_name}-www"
+}
+
+resource "aws_s3_bucket_acl" "www" {
+  bucket = aws_s3_bucket.www.bucket
+  acl    = "public-read"
+}
+
+resource "aws_s3_bucket_website_configuration" "www" {
+  bucket = aws_s3_bucket.www.bucket
+  index_document {
+    suffix = "index.html"
+  }
 }
