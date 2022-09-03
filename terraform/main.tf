@@ -39,7 +39,7 @@ module "api_gateway" {
       payload_format_version = "2.0"
       timeout_milliseconds   = 12000
     }
-     "GET /" = {
+    "GET /" = {
       lambda_arn             = module.lambda_entries_getter.lambda_function_arn
       payload_format_version = "2.0"
       timeout_milliseconds   = 12000
@@ -84,7 +84,7 @@ module "lambda_entry_writer" {
   allowed_triggers = {
     AllowExecutionFromAPIGateway = {
       service    = "apigateway"
-      source_arn = "arn:aws:execute-api:${local.region}:${local.account_id}:${module.api_gateway.this_apigatewayv2_api_arn}/*/*/*"
+      source_arn = "arn:aws:execute-api:${local.region}:${local.account_id}:sy5bexuwy5/*/*/*"
     }
   }
 
