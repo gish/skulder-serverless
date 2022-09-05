@@ -12,20 +12,32 @@ const createCell = (value) => {
 
 const renderEntries = (entries) => {
   const tableBody = document.getElementById("debts-table-body");
-  [...tableBody.children].map((child) => tableBody.removeChild(child));
+  [...tableBody.children].forEach((child) => tableBody.removeChild(child));
   const sortedEntries = [...entries].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
   );
-  sortedEntries.map((entry) => {
+  sortedEntries.forEach((entry) => {
     const row = document.createElement("tr");
     row.append(
       createCell(new Date(entry.date).toLocaleDateString()),
       createCell(entry.collector),
-      createCell(`${entry.amount / 100} kr`),
-      createCell(entry.description)
+      createCell(`${entry.amount / 100} kr`)
     );
     tableBody.append(row);
+
+    const descriptionRow = document.createElement("tr");
+    const description = createCell(entry.description);
+    description.setAttribute("colspan", "3");
+    descriptionRow.append(description);
+    tableBody.append(descriptionRow);
   });
+};
+
+const renderCollector = (collector) => {
+  const name = document.getElementById("collector-name");
+  const debt = document.getElementById("collector-debt");
+  name.innerText = collector.name;
+  debt.innerText = collector.amount / 100;
 };
 
 const submitForm = async () => {
@@ -51,32 +63,32 @@ const submitForm = async () => {
 };
 
 const getCollector = (entries) => {
-  const asaDebts = entries
-    .filter((entry) => entry.collector === "Åsa")
-    .map((entry) => entry.amount)
-    .reduce((total, amount) => total + amount, 0);
-  const erikDebts = entries
-    .filter((entry) => entry.collector === "Erik")
-    .map((entry) => entry.amount)
-    .reduce((total, amount) => total + amount, 0);
+  const getDebts = (collector, entries) =>
+    entries
+      .filter((entry) => entry.collector === collector)
+      .map((entry) => entry.amount)
+      .reduce((total, amount) => total + amount, 0);
+
+  const asaDebts = getDebts("Åsa", entries);
+  const erikDebts = getDebts("Erik", entries);
+
   if (asaDebts - erikDebts > 0) {
-    return { collector: "Asa", amount: asaDebts - erikDebts };
+    return { name: "Åsa", amount: asaDebts - erikDebts };
   } else {
-    return { collector: "Erik", amount: asaDebts - erikDebts };
+    return { name: "Erik", amount: asaDebts - erikDebts };
   }
 };
 
 document.getElementById("form").addEventListener("submit", async (e) => {
   e.preventDefault();
-  submitForm();
-  const entries = await getEntries();
-  renderEntries(entries);
+  await submitForm();
+  run();
 });
 
 const run = async () => {
   const entries = await getEntries();
   renderEntries(entries);
   const collector = getCollector(entries);
-  console.log({ collector });
+  renderCollector(collector);
 };
 run();

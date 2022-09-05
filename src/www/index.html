@@ -9,33 +9,35 @@
     <body>
         <div class="container">
             <article>
+                <mark id="collector-name"></mark> är skyldig <mark id="collector-debt"></mark> kr.
+            </article>
+            <article>
         <form id="form">
             <div class="grid">
                 <fieldset>
-                <input type="radio" name="collector" value="Åsa"/>Åsa
-                    <input type="radio" name="collector" value="Erik"/>Erik
+                    <input type="radio" name="collector" value="Åsa" id="form-collector-asa" /><label for="form-collector-asa">Åsa</label>
+                <input type="radio" name="collector" value="Erik" id="form-collector-erik"/><label for="form-collector-erik">Erik</label>
                 </fieldset>
             </div>
             <div class="grid">
-                <label for="share">är skyldig
-                    <input type="number" name="share" required />
+                <label for="form-share">är skyldig
+                    <input type="number" id="form-share" name="share" required />
                 </label>
-                <label for="amount">av
-                    <input type="number" name="amount" required />
+                <label for="form-amount">av
+                    <input type="number" id="form-amount" name="amount" required />
                 </label>
-                <label for="description">för
-                        <input type="text" name="description" required /></label>
+                <label for="form-description">för
+                        <input type="text" id="form-description" name="description" required /></label>
             </div>
             <input type="submit" value="Spara">
         </form>
             </article>
-        <table>
+        <table role="grid">
             <thead>
                 <tr>
                     <th>Datum</th>
                     <th>Namn</th>
                     <th>Belopp</th>
-                    <th>Beskrivning</th>
                 </tr>
             </thead>
             <tbody id="debts-table-body">
