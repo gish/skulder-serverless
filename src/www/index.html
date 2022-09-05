@@ -1,0 +1,47 @@
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+        <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css">
+
+        <title>Skulder</title>
+    </head>
+    <body>
+        <div class="container">
+            <article>
+        <form id="form">
+            <div class="grid">
+                <fieldset>
+                <input type="radio" name="collector" value="Åsa"/>Åsa
+                    <input type="radio" name="collector" value="Erik"/>Erik
+                </fieldset>
+            </div>
+            <div class="grid">
+                <label for="share">är skyldig
+                    <input type="number" name="share" required />
+                </label>
+                <label for="amount">av
+                    <input type="number" name="amount" required />
+                </label>
+                <label for="description">för
+                        <input type="text" name="description" required /></label>
+            </div>
+            <input type="submit" value="Spara">
+        </form>
+            </article>
+        <table>
+            <thead>
+                <tr>
+                    <th>Datum</th>
+                    <th>Namn</th>
+                    <th>Belopp</th>
+                    <th>Beskrivning</th>
+                </tr>
+            </thead>
+            <tbody id="debts-table-body">
+            </tbody>
+        </table>
+        </div>
+        <script type="text/javascript" src="./main.js"></script>
+    </body>
+</html>

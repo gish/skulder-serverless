@@ -4,7 +4,7 @@ const lambda = new AWS.Lambda();
 const docClient = new AWS.DynamoDB.DocumentClient();
 const { v4: uuidv4 } = require("uuid");
 
-const writeEntry = ({ id, amount, collector, date }) => {
+const writeEntry = ({ id, amount, collector, description, date }) => {
   const params = {
     TableName: "skulder-debts",
     Item: {
@@ -12,6 +12,7 @@ const writeEntry = ({ id, amount, collector, date }) => {
       date,
       amount,
       collector,
+      description,
     },
   };
   return docClient.put(params).promise();
@@ -20,17 +21,26 @@ const writeEntry = ({ id, amount, collector, date }) => {
 // Handler
 exports.handler = async function (event) {
   try {
-    const { amount, collector } = JSON.parse(event.body);
+    const { amount, collector, description } = JSON.parse(event.body);
     if (!amount) {
       return formatResponse(400, { message: "Missing amount" });
     }
     if (!collector) {
       return formatResponse(400, { message: "Missing collector" });
     }
+    if (!description) {
+      return formatResponse(400, { message: "Missing description" });
+    }
 
     const date = new Date();
     const id = uuidv4();
-    const entry = { id, amount, collector, date: date.toISOString() };
+    const entry = {
+      id,
+      amount,
+      collector,
+      description,
+      date: date.toISOString(),
+    };
 
     await writeEntry(entry);
 

@@ -39,11 +39,6 @@ module "api_gateway" {
 
 
   integrations = {
-    "GET /" = {
-      integration_type   = "HTTP_PROXY"
-      integration_uri    = "http://${aws_s3_bucket.www.website_endpoint}"
-      integration_method = "GET"
-    }
     "POST /api/v1/entries" = {
       lambda_arn             = module.lambda_entry_writer.lambda_function_arn
       payload_format_version = "2.0"
@@ -53,6 +48,11 @@ module "api_gateway" {
       lambda_arn             = module.lambda_entries_getter.lambda_function_arn
       payload_format_version = "2.0"
       timeout_milliseconds   = 12000
+    }
+    "$default" = {
+      integration_type   = "HTTP_PROXY"
+      integration_uri    = "http://${aws_s3_bucket.www.website_endpoint}"
+      integration_method = "GET"
     }
   }
 
