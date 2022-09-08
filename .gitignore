@@ -4,3 +4,4 @@ terraform/terraform.tfstate.backup
 terraform/.terraform.lock.hcl
 terraform/builds
 src/*/**/node_modules
+bin/

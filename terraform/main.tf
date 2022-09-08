@@ -85,11 +85,10 @@ module "lambda_entry_writer" {
 
   function_name = "${local.application_name}-entry-writer"
   description   = "write entry"
-  handler       = "index.handler"
-  runtime       = "nodejs16.x"
-
-  source_path = "../src/entry-writer"
-  publish     = true
+  handler       = "entry-writer-go"
+  runtime       = "go1.x"
+  source_path   = "../bin/entry-writer-go"
+  publish       = true
 
   allowed_triggers = {
     AllowExecutionFromAPIGateway = {
@@ -114,10 +113,10 @@ module "lambda_entries_getter" {
 
   function_name = "${local.application_name}-entries-getter"
   description   = "retrieve all entries"
-  handler       = "index.handler"
-  runtime       = "nodejs16.x"
+  handler       = "entries-getter-go"
+  runtime       = "go1.x"
 
-  source_path = "../src/entries-getter"
+  source_path = "../bin/entries-getter-go"
   publish     = true
 
   allowed_triggers = {
