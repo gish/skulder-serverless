@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"log"
+	"os"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -27,11 +28,15 @@ func Handler(req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse,
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigEnable}))
 	svc := dynamodb.New(sess)
-	tableName := "skulder-debts"
+	tableName := os.Getenv("TABLE_NAME")
+	if tableName == "" {
+		log.Fatalf("Failed getting table name from env")
+		return response("Failed retrieving entries", 500), nil
+	}
+
 	result, err := svc.Scan(&dynamodb.ScanInput{
 		TableName: &tableName,
 	})
-
 	if err != nil {
 		log.Fatalf("Failed getting items: %s", err)
 		return response("Failed retrieving entries", 500), nil

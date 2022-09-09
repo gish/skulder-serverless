@@ -10,6 +10,7 @@ provider "aws" {
   default_tags {
     tags = {
       CreatedByTerraform = "yes"
+      Application        = "${local.application_name}"
     }
   }
 }
@@ -57,8 +58,7 @@ module "api_gateway" {
   }
 
   tags = {
-    Name        = "http-apigateway"
-    Application = "${local.application_name}"
+    Name = "http-apigateway"
   }
 }
 
@@ -90,6 +90,11 @@ module "lambda_entry_writer" {
   source_path   = "../bin/entry-writer-go"
   publish       = true
 
+
+  environment_variables = {
+    TABLE_NAME = "${local.application_name}-debts"
+  }
+
   allowed_triggers = {
     AllowExecutionFromAPIGateway = {
       service    = "apigateway"
@@ -103,8 +108,7 @@ module "lambda_entry_writer" {
   cloudwatch_logs_retention_in_days = local.log_retention_in_days
 
   tags = {
-    Name        = "skulder"
-    Application = "${local.application_name}"
+    Name = "skulder"
   }
 }
 
@@ -119,6 +123,10 @@ module "lambda_entries_getter" {
   source_path = "../bin/entries-getter-go"
   publish     = true
 
+  environment_variables = {
+    TABLE_NAME = "${local.application_name}-debts"
+  }
+
   allowed_triggers = {
     AllowExecutionFromAPIGateway = {
       service    = "apigateway"
@@ -132,8 +140,7 @@ module "lambda_entries_getter" {
   cloudwatch_logs_retention_in_days = local.log_retention_in_days
 
   tags = {
-    Name        = "skulder"
-    Application = "${local.application_name}"
+    Name = "skulder"
   }
 }
 

@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"log"
+	"os"
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -36,7 +37,12 @@ func Handler(req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse,
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigEnable}))
 	svc := dynamodb.New(sess)
-	tableName := "skulder-debts"
+
+	tableName := os.Getenv("TABLE_NAME")
+	if tableName == "" {
+		log.Fatalf("Failed getting table name from env")
+		return response("Failed saving entries", 500), nil
+	}
 
 	var entryRequest EntryRequest
 	err := json.Unmarshal([]byte(req.Body), &entryRequest)
