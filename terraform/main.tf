@@ -15,7 +15,13 @@ provider "aws" {
   }
 }
 
-
+terraform {
+  backend "s3" {
+    bucket = "hedberg-terraform-states"
+    key    = "skulder"
+    region = "eu-north-1"
+  }
+}
 
 module "api_gateway" {
   source  = "terraform-aws-modules/apigateway-v2/aws"
